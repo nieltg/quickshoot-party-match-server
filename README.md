@@ -20,6 +20,8 @@ yarn
 yarn run test
 ```
 
+Please ensure that your code passes the test suite before pushing.
+
 ### License
 
 [MIT](LICENSE)
