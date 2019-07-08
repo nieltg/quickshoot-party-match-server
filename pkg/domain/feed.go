@@ -31,18 +31,10 @@ func (n *Feed) Put(notif FeedItem) {
 	n.waitChannel = make(chan struct{})
 }
 
-// List fetches all available items.
-func (n *Feed) List() ([]FeedItem, int, <-chan struct{}) {
+// List fetches all available items after last ID. (-1 if no last ID)
+func (n *Feed) List(lastID int) ([]FeedItem, int, <-chan struct{}) {
 	n.itemsMutex.RLock()
 	defer n.itemsMutex.RUnlock()
 
-	return n.items, len(n.items) - 1, n.waitChannel
-}
-
-// ListAfter fetches all available items after lastID.
-func (n *Feed) ListAfter(lastID uint64) ([]FeedItem, int, <-chan struct{}) {
-	n.itemsMutex.RLock()
-	defer n.itemsMutex.RUnlock()
-
-	return n.items[lastID:], len(n.items) - 1, n.waitChannel
+	return n.items[lastID+1:], len(n.items) - 1, n.waitChannel
 }
