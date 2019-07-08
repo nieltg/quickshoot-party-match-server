@@ -61,8 +61,7 @@ func (s *Server) listRoomNotifs(w http.ResponseWriter, req *http.Request) {
 	lastIDStr := req.URL.Query().Get("lastId")
 	if lastIDStr == "" {
 		lastID = -1
-	}
-	if lastID, err = strconv.Atoi(lastIDStr); err != nil {
+	} else if lastID, err = strconv.Atoi(lastIDStr); err != nil {
 		log.Println("Unable to parse last feed ID:", err)
 		return
 	}
