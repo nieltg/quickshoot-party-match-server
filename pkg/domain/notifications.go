@@ -10,44 +10,43 @@ type Notifications struct {
 	notifs      []Notification
 	notifsMutex sync.RWMutex
 
-	notifChannel chan struct{}
+	WaitChannel chan struct{}
 }
 
-// NewNotifications ...
+// NewNotifications initializes this data structure.
 func NewNotifications() *Notifications {
 	return &Notifications{
-		notifChannel: make(chan struct{}),
+		WaitChannel: make(chan struct{}),
 	}
 }
 
-// Put ...
+// Put a new notification to this data structure and notify listeners.
 func (n *Notifications) Put(notif Notification) {
 	n.notifsMutex.Lock()
 	defer n.notifsMutex.Unlock()
 
 	n.notifs = append(n.notifs, notif)
 
-	close(n.notifChannel)
-	n.notifChannel = make(chan struct{})
+	close(n.WaitChannel)
+	n.WaitChannel = make(chan struct{})
 }
 
-func (n *Notifications) listUnlocked(useLastID bool, lastID uint64) []Notification {
-	if useLastID {
-		return n.notifs[lastID:]
-	}
+// RLock locks data structure for reading.
+func (n *Notifications) RLock() {
+	n.notifsMutex.RLock()
+}
+
+// RUnlock unlocks data structure so new notification can be put to.
+func (n *Notifications) RUnlock() {
+	n.notifsMutex.RUnlock()
+}
+
+// List fetches all available notifications. Call RLock first.
+func (n *Notifications) List() []Notification {
 	return n.notifs
 }
 
-// List ...
-func (n *Notifications) List(useLastID bool, lastID uint64) []Notification {
-	n.notifsMutex.RLock()
-	defer n.notifsMutex.RUnlock()
-
-	notifs := n.listUnlocked(useLastID, lastID)
-	if len(notifs) > 0 {
-		return notifs
-	}
-
-	<-n.notifChannel
-	return n.listUnlocked(useLastID, lastID)
+// ListAfter fetches all available notifications after lastID. Call RLock first.
+func (n *Notifications) ListAfter(lastID uint64) []Notification {
+	return n.notifs[lastID:]
 }
