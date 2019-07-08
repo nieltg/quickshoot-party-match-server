@@ -9,6 +9,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/nieltg/quickshoot-party-match-server/pkg/domain"
+	"github.com/nieltg/quickshoot-party-match-server/pkg/util"
 )
 
 // Server represents a HTTP Server.
@@ -70,7 +71,7 @@ func (s *Server) listRoomNotifs(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	var notifs []domain.FeedItem
+	var notifs []util.FeedItem
 	var nextLastID int
 	var waitChannel <-chan struct{}
 
