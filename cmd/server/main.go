@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"net/http"
 	"time"
 
@@ -12,5 +13,8 @@ func main() {
 	server.DeferredRequestMaxDuration = 30 * time.Second
 	server.Domain.JoinMaxDuration = 5 * time.Minute
 
-	http.ListenAndServe(":8080", server.Handler())
+	err := http.ListenAndServe(":8080", server.Handler())
+	if err != nil {
+		log.Fatal("Unable to listen and serve: ", err)
+	}
 }
