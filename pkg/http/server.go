@@ -35,11 +35,13 @@ func (s *Server) newRoom(w http.ResponseWriter, req *http.Request) {
 	})
 	if err != nil {
 		log.Println("Unable to marshal JSON output:", err)
+		w.WriteHeader(500)
 		return
 	}
 
 	if _, err = w.Write(data); err != nil {
 		log.Println("Unable to write response:", err)
+		w.WriteHeader(500)
 		return
 	}
 }
@@ -48,6 +50,7 @@ func (s *Server) listRoomNotifs(w http.ResponseWriter, req *http.Request) {
 	roomID, err := strconv.ParseUint(mux.Vars(req)["id"], 10, 64)
 	if err != nil {
 		log.Println("Unable to parse room ID:", err)
+		w.WriteHeader(500)
 		return
 	}
 
@@ -58,11 +61,12 @@ func (s *Server) listRoomNotifs(w http.ResponseWriter, req *http.Request) {
 	}
 
 	var lastID int
-	lastIDStr := req.URL.Query().Get("lastId")
+	lastIDStr := req.URL.Query().Get("lastID")
 	if lastIDStr == "" {
 		lastID = -1
 	} else if lastID, err = strconv.Atoi(lastIDStr); err != nil {
 		log.Println("Unable to parse last feed ID:", err)
+		w.WriteHeader(500)
 		return
 	}
 
@@ -85,11 +89,13 @@ func (s *Server) listRoomNotifs(w http.ResponseWriter, req *http.Request) {
 	})
 	if err != nil {
 		log.Println("Unable to marshal JSON output:", err)
+		w.WriteHeader(500)
 		return
 	}
 
 	if _, err = w.Write(data); err != nil {
 		log.Println("Unable to write response:", err)
+		w.WriteHeader(500)
 		return
 	}
 }
