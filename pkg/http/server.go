@@ -20,11 +20,11 @@ type Server struct {
 }
 
 // Handler returns new handler for HTTP requests.
-func (server *Server) Handler() http.Handler {
+func (s *Server) Handler() http.Handler {
 	router := mux.NewRouter()
-	router.HandleFunc("/room/new", server.newRoom)
-	router.HandleFunc("/room/{id}/notifications", server.listRoomNotifs)
-	router.HandleFunc("/room/{id}/join", server.join)
+	router.HandleFunc("/room/new", s.newRoom)
+	router.HandleFunc("/room/{id}/notifications", s.listRoomNotifs)
+	router.HandleFunc("/room/{id}/join", s.joinRoom)
 
 	return router
 }
@@ -102,7 +102,7 @@ func (s *Server) listRoomNotifs(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func (s *Server) join(w http.ResponseWriter, req *http.Request) {
+func (s *Server) joinRoom(w http.ResponseWriter, req *http.Request) {
 	roomID, err := strconv.ParseUint(mux.Vars(req)["id"], 10, 64)
 	if err != nil {
 		log.Println("Unable to parse room ID:", err)
