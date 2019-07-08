@@ -1,11 +1,23 @@
 package domain
 
-import "github.com/nieltg/quickshoot-party-match-server/pkg/util"
+import (
+	"fmt"
+	"sync"
+
+	"github.com/nieltg/quickshoot-party-match-server/pkg/util"
+)
+
+// Member is representation of game user who joined room.
+type Member struct {
+	ID   uint64
+	Name string
+}
 
 // Room is a representation of game room.
 type Room struct {
-	ID   uint64
-	Feed *util.Feed
+	ID      uint64
+	Feed    *util.Feed
+	Members sync.Map
 
 	deleteChannel chan struct{}
 }
@@ -17,4 +29,11 @@ func newRoom(ID uint64) *Room {
 
 		deleteChannel: make(chan struct{}),
 	}
+}
+
+// Join is a function to let users join
+func (room *Room) Join(member *Member) {
+	room.Members.Store(member.ID, member)
+
+	room.Feed.Put(fmt.Sprintf("User %d has joined!", member.ID))
 }
