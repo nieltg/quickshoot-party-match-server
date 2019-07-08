@@ -1,7 +1,11 @@
 package main
 
-import "fmt"
+import (
+	"net/http"
+
+	appHttp "github.com/nieltg/quickshoot-party-match-server/pkg/http"
+)
 
 func main() {
-	fmt.Println("Hello world!")
+	http.ListenAndServe(":8080", appHttp.NewRouter())
 }
