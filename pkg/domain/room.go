@@ -16,7 +16,7 @@ type Member struct {
 // Room is a representation of game room.
 type Room struct {
 	ID      uint64
-	Feed    *util.Feed
+	Events  *util.Feed
 	Members sync.Map
 
 	deleteChannel chan struct{}
@@ -24,8 +24,8 @@ type Room struct {
 
 func newRoom(ID uint64) *Room {
 	return &Room{
-		ID:   ID,
-		Feed: util.NewFeed(),
+		ID:     ID,
+		Events: util.NewFeed(),
 
 		deleteChannel: make(chan struct{}),
 	}
@@ -35,5 +35,5 @@ func newRoom(ID uint64) *Room {
 func (room *Room) Join(member *Member) {
 	room.Members.Store(member.ID, member)
 
-	room.Feed.Put(fmt.Sprintf("User %d has joined!", member.ID))
+	room.Events.Put(fmt.Sprintf("User %d has joined!", member.ID))
 }

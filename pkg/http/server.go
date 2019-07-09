@@ -23,8 +23,8 @@ type Server struct {
 func (server *Server) Handler() http.Handler {
 	router := mux.NewRouter()
 	router.HandleFunc("/room/new", server.newRoom)
-	router.HandleFunc("/room/{id}/notifications", server.listRoomNotifs)
-	router.HandleFunc("/room/{id}/join", server.join)
+	router.HandleFunc("/room/{id}/events", server.listRoomEvents)
+	router.HandleFunc("/room/{id}/join", server.joinRoom)
 
 	return router
 }
@@ -48,7 +48,7 @@ func (server *Server) newRoom(writer http.ResponseWriter, request *http.Request)
 	}
 }
 
-func (server *Server) listRoomNotifs(writer http.ResponseWriter, request *http.Request) {
+func (server *Server) listRoomEvents(writer http.ResponseWriter, request *http.Request) {
 	roomID, err := strconv.ParseUint(mux.Vars(request)["id"], 10, 64)
 	if err != nil {
 		log.Println("Unable to parse room ID:", err)
@@ -76,11 +76,11 @@ func (server *Server) listRoomNotifs(writer http.ResponseWriter, request *http.R
 	var nextLastID int
 	var waitChannel <-chan struct{}
 
-	notifs, nextLastID, waitChannel = room.Feed.List(lastID)
+	notifs, nextLastID, waitChannel = room.Events.List(lastID)
 	if len(notifs) == 0 {
 		select {
 		case <-waitChannel:
-			notifs, nextLastID, _ = room.Feed.List(lastID)
+			notifs, nextLastID, _ = room.Events.List(lastID)
 		case <-time.After(server.DeferredRequestMaxDuration):
 		}
 	}
@@ -102,7 +102,7 @@ func (server *Server) listRoomNotifs(writer http.ResponseWriter, request *http.R
 	}
 }
 
-func (server *Server) join(writer http.ResponseWriter, request *http.Request) {
+func (server *Server) joinRoom(writer http.ResponseWriter, request *http.Request) {
 	roomID, err := strconv.ParseUint(mux.Vars(request)["id"], 10, 64)
 	if err != nil {
 		log.Println("Unable to parse room ID:", err)

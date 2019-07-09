@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -9,13 +10,14 @@ import (
 )
 
 func main() {
-	fmt.Println("Server is starting...")
-
 	server := new(appHttp.Server)
 	server.DeferredRequestMaxDuration = 30 * time.Second
 	server.Domain.JoinMaxDuration = 5 * time.Minute
 
-	fmt.Println("Server is started!");
+	fmt.Println("Server is starting...")
 
-	http.ListenAndServe(":8080", server.Handler())
+	err := http.ListenAndServe(":8080", server.Handler())
+	if err != nil {
+		log.Fatal("Unable to listen and serve: ", err)
+	}
 }
