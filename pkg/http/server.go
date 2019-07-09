@@ -29,46 +29,46 @@ func (server *Server) Handler() http.Handler {
 	return router
 }
 
-func (s *Server) newRoom(w http.ResponseWriter, req *http.Request) {
-	room := s.Domain.CreateRoom()
+func (server *Server) newRoom(writer http.ResponseWriter, request *http.Request) {
+	room := server.Domain.CreateRoom()
 
 	data, err := json.Marshal(newRoomResponse{
 		ID: room.ID,
 	})
 	if err != nil {
 		log.Println("Unable to marshal JSON output:", err)
-		w.WriteHeader(500)
+		writer.WriteHeader(500)
 		return
 	}
 
-	if _, err = w.Write(data); err != nil {
+	if _, err = writer.Write(data); err != nil {
 		log.Println("Unable to write response:", err)
-		w.WriteHeader(500)
+		writer.WriteHeader(500)
 		return
 	}
 }
 
-func (s *Server) listRoomNotifs(w http.ResponseWriter, req *http.Request) {
-	roomID, err := strconv.ParseUint(mux.Vars(req)["id"], 10, 64)
+func (server *Server) listRoomNotifs(writer http.ResponseWriter, request *http.Request) {
+	roomID, err := strconv.ParseUint(mux.Vars(request)["id"], 10, 64)
 	if err != nil {
 		log.Println("Unable to parse room ID:", err)
-		w.WriteHeader(500)
+		writer.WriteHeader(500)
 		return
 	}
 
-	room := s.Domain.Room(roomID)
+	room := server.Domain.Room(roomID)
 	if room == nil {
-		w.WriteHeader(404)
+		writer.WriteHeader(404)
 		return
 	}
 
 	var lastID int
-	lastIDStr := req.URL.Query().Get("lastID")
+	lastIDStr := request.URL.Query().Get("lastID")
 	if lastIDStr == "" {
 		lastID = -1
 	} else if lastID, err = strconv.Atoi(lastIDStr); err != nil {
 		log.Println("Unable to parse last feed ID:", err)
-		w.WriteHeader(500)
+		writer.WriteHeader(500)
 		return
 	}
 
@@ -81,7 +81,7 @@ func (s *Server) listRoomNotifs(w http.ResponseWriter, req *http.Request) {
 		select {
 		case <-waitChannel:
 			notifs, nextLastID, _ = room.Feed.List(lastID)
-		case <-time.After(s.DeferredRequestMaxDuration):
+		case <-time.After(server.DeferredRequestMaxDuration):
 		}
 	}
 
@@ -91,36 +91,36 @@ func (s *Server) listRoomNotifs(w http.ResponseWriter, req *http.Request) {
 	})
 	if err != nil {
 		log.Println("Unable to marshal JSON output:", err)
-		w.WriteHeader(500)
+		writer.WriteHeader(500)
 		return
 	}
 
-	if _, err = w.Write(data); err != nil {
+	if _, err = writer.Write(data); err != nil {
 		log.Println("Unable to write response:", err)
-		w.WriteHeader(500)
+		writer.WriteHeader(500)
 		return
 	}
 }
 
-func (s *Server) join(w http.ResponseWriter, req *http.Request) {
-	roomID, err := strconv.ParseUint(mux.Vars(req)["id"], 10, 64)
+func (server *Server) join(writer http.ResponseWriter, request *http.Request) {
+	roomID, err := strconv.ParseUint(mux.Vars(request)["id"], 10, 64)
 	if err != nil {
 		log.Println("Unable to parse room ID:", err)
-		w.WriteHeader(500)
+		writer.WriteHeader(500)
 		return
 	}
 
-	room := s.Domain.Room(roomID)
+	room := server.Domain.Room(roomID)
 	if room == nil {
-		w.WriteHeader(404)
+		writer.WriteHeader(404)
 		return
 	}
 
-	decoder := json.NewDecoder(req.Body)
+	decoder := json.NewDecoder(request.Body)
 	var requestBody joinRoomRequest
 	if err = decoder.Decode(&requestBody); err != nil {
 		log.Println("Unable to decode body:", err)
-		w.WriteHeader(500)
+		writer.WriteHeader(500)
 		return
 	}
 
