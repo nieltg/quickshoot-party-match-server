@@ -7,7 +7,8 @@ type newRoomRequest struct {
 }
 
 type newRoomResponse struct {
-	ID uint64
+	ID       uint64
+	capacity uint
 }
 
 type roomEventsResponse struct {

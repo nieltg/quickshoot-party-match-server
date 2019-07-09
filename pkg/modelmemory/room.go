@@ -65,3 +65,7 @@ func (r *room) Member(memberID uint64) model.Member {
 func (r *room) Events() model.RoomEventFeed {
 	return r.events
 }
+
+func (r *room) MaximumCapacity() uint {
+	return r.payload.MaxMemberCount
+}

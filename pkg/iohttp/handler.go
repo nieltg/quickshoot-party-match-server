@@ -20,9 +20,9 @@ type Handler struct {
 // Handler returns new handler for HTTP requests.
 func (s *Handler) Handler() http.Handler {
 	router := mux.NewRouter()
-	router.HandleFunc("/room/new", s.newRoom)
-	router.HandleFunc("/room/{id}/events", s.listRoomEvents)
-	router.HandleFunc("/room/{id}/member/new", s.newRoomMember)
+	router.HandleFunc("/room/new", s.newRoom).Methods("POST")
+	router.HandleFunc("/room/{id}/events", s.listRoomEvents).Methods("GET")
+	router.HandleFunc("/room/{id}/member/new", s.newRoomMember).Methods("POST")
 
 	return router
 }
@@ -35,9 +35,14 @@ func (s *Handler) newRoom(w http.ResponseWriter, req *http.Request) {
 
 	room := s.Domain.CreateRoom(body.Payload)
 
-	writeJSON(w, newRoomResponse{
+	response := newRoomResponse{
 		ID: room.ID(),
-	})
+		capacity: room.MaximumCapacity(),
+	}
+
+	log.Print("Response: ")
+	log.Println(response)
+	writeJSON(w, response)
 }
 
 func (s *Handler) listRoomEvents(w http.ResponseWriter, req *http.Request) {

@@ -14,6 +14,9 @@ type Room interface {
 
 	// Events returns feed of events happening in this room.
 	Events() RoomEventFeed
+
+	// Maximum capacity
+	MaximumCapacity() uint
 }
 
 // RoomPayload represents payload of a game room.
