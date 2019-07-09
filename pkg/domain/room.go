@@ -1,17 +1,11 @@
 package domain
 
 import (
-	"fmt"
 	"sync"
 
+	"github.com/nieltg/quickshoot-party-match-server/pkg/domain/event"
 	"github.com/nieltg/quickshoot-party-match-server/pkg/util"
 )
-
-// Member is representation of game user who joined room.
-type Member struct {
-	ID   uint64
-	Name string
-}
 
 // Room is a representation of game room.
 type Room struct {
@@ -31,9 +25,12 @@ func newRoom(ID uint64) *Room {
 	}
 }
 
-// Join is a function to let users join
-func (room *Room) Join(member *Member) {
+// CreateMember is a function to let users join
+func (room *Room) CreateMember(member *Member) {
 	room.Members.Store(member.ID, member)
 
-	room.Events.Put(fmt.Sprintf("User %d has joined!", member.ID))
+	room.Events.Put(event.MemberJoin(&event.MemberJoinPayload{
+		ID:   member.ID,
+		Name: member.Name,
+	}))
 }

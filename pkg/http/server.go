@@ -24,7 +24,7 @@ func (s *Server) Handler() http.Handler {
 	router := mux.NewRouter()
 	router.HandleFunc("/room/new", s.newRoom)
 	router.HandleFunc("/room/{id}/events", s.listRoomEvents)
-	router.HandleFunc("/room/{id}/join", s.joinRoom)
+	router.HandleFunc("/room/{id}/member/new", s.newRoomMember)
 
 	return router
 }
@@ -102,7 +102,7 @@ func (s *Server) listRoomEvents(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func (s *Server) joinRoom(w http.ResponseWriter, req *http.Request) {
+func (s *Server) newRoomMember(w http.ResponseWriter, req *http.Request) {
 	roomID, err := strconv.ParseUint(mux.Vars(req)["id"], 10, 64)
 	if err != nil {
 		log.Println("Unable to parse room ID:", err)
@@ -124,5 +124,5 @@ func (s *Server) joinRoom(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	room.Join(&requestBody.Member)
+	room.CreateMember(&requestBody.Member)
 }
