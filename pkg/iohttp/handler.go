@@ -36,12 +36,10 @@ func (s *Handler) newRoom(w http.ResponseWriter, req *http.Request) {
 	room := s.Domain.CreateRoom(body.Payload)
 
 	response := newRoomResponse{
-		ID: room.ID(),
-		capacity: room.MaximumCapacity(),
+		ID:       room.ID(),
+		Capacity: room.MaximumCapacity(),
 	}
 
-	log.Print("Response: ")
-	log.Println(response)
 	writeJSON(w, response)
 }
 
