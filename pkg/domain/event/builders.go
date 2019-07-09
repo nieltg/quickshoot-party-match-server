@@ -1,20 +1,18 @@
 package event
 
-import "github.com/nieltg/quickshoot-party-match-server/pkg/domain"
-
 // MemberJoin builds a member-join event.
 func MemberJoin(payload *MemberJoinPayload) Event {
 	return valueWithPayload{
-		Type: TypeMemberJoin,
-		Payload: payload
+		Type:    TypeMemberJoin,
+		Payload: payload,
 	}
 }
 
 // MemberLeave builds a member-leave event.
 func MemberLeave(payload *MemberLeavePayload) Event {
 	return valueWithPayload{
-		Type: TypeMemberLeave,
-		Payload: payload
+		Type:    TypeMemberLeave,
+		Payload: payload,
 	}
 }
 
@@ -28,15 +26,15 @@ func GameBegin() Event {
 // MemberTapTime builds a member-tap-time event.
 func MemberTapTime(payload *MemberTapTimePayload) Event {
 	return valueWithPayload{
-		Type: TypeMemberTapTime,
-		Payload: payload
+		Type:    TypeMemberTapTime,
+		Payload: payload,
 	}
 }
 
 // GameEnd builds a game-end event.
 func GameEnd(payload *GameEndPayload) Event {
 	return valueWithPayload{
-		Type: TypeGameEnd,
-		Payload: payload
+		Type:    TypeGameEnd,
+		Payload: payload,
 	}
 }
