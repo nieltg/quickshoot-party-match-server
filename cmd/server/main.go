@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -17,6 +18,8 @@ func main() {
 			JoinMaxDuration: 5 * time.Minute,
 		},
 	}
+
+	fmt.Println("Server is configured to listen on :8080")
 
 	err := http.ListenAndServe(":8080", handler.Handler())
 	if err != nil {
