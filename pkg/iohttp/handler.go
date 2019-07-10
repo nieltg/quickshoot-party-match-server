@@ -27,31 +27,31 @@ func (s *Handler) Handler() http.Handler {
 	return router
 }
 
-func (s *Handler) newRoom(w http.ResponseWriter, req *http.Request) {
+func (s *Handler) newRoom(writer http.ResponseWriter, request *http.Request) {
 	var body newRoomRequest
-	if !decodeJSONBody(w, req.Body, &body) {
+	if !decodeJSONBody(writer, request.Body, &body) {
 		return
 	}
 
 	room := s.Domain.CreateRoom(body.Payload)
 
 	response := newRoomResponse{
-		ID:       room.ID(),
-		Capacity: room.MaximumCapacity(),
+		ID:                       room.ID(),
+		MaximumDurationInSeconds: s.Domain.MaximumJoinDurationInSeconds(),
 	}
 
-	writeJSON(w, response)
+	writeJSON(writer, response)
 }
 
-func (s *Handler) listRoomEvents(w http.ResponseWriter, req *http.Request) {
-	room := s.fetchRoom(w, mux.Vars(req)["id"])
+func (s *Handler) listRoomEvents(writer http.ResponseWriter, request *http.Request) {
+	room := s.fetchRoom(writer, mux.Vars(request)["id"])
 	if room == nil {
 		return
 	}
 
 	var lastID int
 
-	lastIDStr := req.URL.Query().Get("lastID")
+	lastIDStr := request.URL.Query().Get("lastID")
 	if lastIDStr == "" {
 		lastID = -1
 	} else {
@@ -59,7 +59,7 @@ func (s *Handler) listRoomEvents(w http.ResponseWriter, req *http.Request) {
 
 		if lastID, err = strconv.Atoi(lastIDStr); err != nil {
 			log.Println("Unable to parse last feed ID:", err)
-			w.WriteHeader(500)
+			writer.WriteHeader(500)
 			return
 		}
 	}
@@ -77,20 +77,20 @@ func (s *Handler) listRoomEvents(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	writeJSON(w, roomEventsResponse{
+	writeJSON(writer, roomEventsResponse{
 		Notifications: notifs,
 		LastID:        nextLastID,
 	})
 }
 
-func (s *Handler) newRoomMember(w http.ResponseWriter, req *http.Request) {
-	room := s.fetchRoom(w, mux.Vars(req)["id"])
+func (s *Handler) newRoomMember(writer http.ResponseWriter, request *http.Request) {
+	room := s.fetchRoom(writer, mux.Vars(request)["id"])
 	if room == nil {
 		return
 	}
 
 	var body newRoomMemberRequest
-	if !decodeJSONBody(w, req.Body, &body) {
+	if !decodeJSONBody(writer, request.Body, &body) {
 		return
 	}
 
