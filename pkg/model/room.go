@@ -14,10 +14,9 @@ type Room interface {
 
 	// Events returns feed of events happening in this room.
 	Events() RoomEventFeed
-
 }
 
 // RoomPayload represents payload of a game room.
 type RoomPayload struct {
-	MaxMemberCount uint
+	MaxMemberCount uint64
 }
