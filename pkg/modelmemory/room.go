@@ -13,6 +13,8 @@ type room struct {
 	events  *roomEventFeed
 	members sync.Map
 
+	mutex sync.RWMutex
+
 	counter     int32
 	gameStarted bool
 
@@ -42,8 +44,12 @@ func (r *room) CreateMember(payload model.MemberPayload) (m model.Member) {
 		return nil
 	}
 
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
+
 	m = &member{payload: payload}
 	r.members.Store(payload.ID, m)
+
 	atomic.AddInt32(&r.counter, 1)
 
 	r.events.put(model.RoomEventMemberJoin(&model.RoomEventMemberJoinPayload{
@@ -60,7 +66,12 @@ func (r *room) CreateMember(payload model.MemberPayload) (m model.Member) {
 
 // DeleteMember removes a member from this room by the member ID.
 func (r *room) DeleteMember(memberID uint64) {
+
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
+
 	r.members.Delete(memberID)
+	
 	atomic.AddInt32(&r.counter, -1)
 
 	r.events.put(model.RoomEventMemberLeave(&model.RoomEventMemberLeavePayload{
