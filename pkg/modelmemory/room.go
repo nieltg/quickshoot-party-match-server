@@ -13,17 +13,19 @@ type room struct {
 	events  *roomEventFeed
 	members sync.Map
 
-	counter int32
+	counter      int32
+	game_started bool
 
 	deleteChannel chan struct{}
 }
 
 func newRoom(ID uint64, payload model.RoomPayload) *room {
 	return &room{
-		id:      ID,
-		payload: payload,
-		events:  newRoomEventFeed(),
-		counter: 0, // TODO: clarifiy if creating room still needs separate request for join / not
+		id:           ID,
+		payload:      payload,
+		events:       newRoomEventFeed(),
+		counter:      0, // TODO: clarifiy if creating room still needs separate request for join / not
+		game_started: false,
 
 		deleteChannel: make(chan struct{}),
 	}
@@ -86,5 +88,11 @@ func (r *room) IsFull() bool {
 }
 
 func (r *room) StartGame() {
+	r.game_started = true
 	r.events.put(model.RoomEventGameBegin())
+}
+
+func (r *room) IsGameStarted() bool {
+	// TODO: change this shit!
+	return r.game_started
 }
