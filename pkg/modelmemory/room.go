@@ -13,7 +13,7 @@ type room struct {
 	events  *roomEventFeed
 	members sync.Map
 
-	counter      int32
+	counter     int32
 	gameStarted bool
 
 	deleteChannel chan struct{}
@@ -21,10 +21,10 @@ type room struct {
 
 func newRoom(ID uint64, payload model.RoomPayload) *room {
 	return &room{
-		id:           ID,
-		payload:      payload,
-		events:       newRoomEventFeed(),
-		counter:      0, // TODO: clarifiy if creating room still needs separate request for join / not
+		id:          ID,
+		payload:     payload,
+		events:      newRoomEventFeed(),
+		counter:     0, // TODO: clarifiy if creating room still needs separate request for join / not
 		gameStarted: false,
 
 		deleteChannel: make(chan struct{}),
@@ -38,6 +38,10 @@ func (r *room) ID() uint64 {
 
 // CreateMember creates a member representation in this room.
 func (r *room) CreateMember(payload model.MemberPayload) (m model.Member) {
+	if r.isFull() {
+		return nil
+	}
+
 	m = &member{payload: payload}
 	r.members.Store(payload.ID, m)
 	atomic.AddInt32(&r.counter, 1)
@@ -46,6 +50,11 @@ func (r *room) CreateMember(payload model.MemberPayload) (m model.Member) {
 		ID:   payload.ID,
 		Name: payload.Name,
 	}))
+
+	if r.isFull() {
+		r.startGame()
+	}
+
 	return
 }
 
@@ -74,24 +83,24 @@ func (r *room) Events() model.RoomEventFeed {
 	return r.events
 }
 
-func (r *room) MaximumCapacity() uint {
+func (r *room) maximumCapacity() uint {
 	return r.payload.MaxMemberCount
 }
 
-// Size returns size of the member map
-func (r *room) Size() int32 {
+// size returns size of the member map
+func (r *room) size() int32 {
 	return r.counter
 }
 
-func (r *room) IsFull() bool {
-	return string(r.Size()) == string(r.MaximumCapacity())
+func (r *room) isFull() bool {
+	return string(r.size()) == string(r.maximumCapacity())
 }
 
-func (r *room) StartGame() {
+func (r *room) startGame() {
 	r.gameStarted = true
 	r.events.put(model.RoomEventGameBegin())
 }
 
-func (r *room) IsGameStarted() bool {
+func (r *room) isGameStarted() bool {
 	return r.gameStarted
 }
