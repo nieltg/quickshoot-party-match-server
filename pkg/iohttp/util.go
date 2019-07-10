@@ -47,13 +47,13 @@ func writeJSON(w http.ResponseWriter, v interface{}) bool {
 		return false
 	}
 
+	w.Header().Set("Content-Type", "application/json")
+
 	if _, err = w.Write(data); err != nil {
 		log.Println("Unable to write response:", err)
 		w.WriteHeader(500)
 		return false
 	}
-
-	w.Header().Set("Content-Type", "application/json")
 
 	return true
 }

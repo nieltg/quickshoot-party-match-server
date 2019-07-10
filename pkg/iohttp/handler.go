@@ -94,9 +94,7 @@ func (s *Handler) newRoomMember(writer http.ResponseWriter, request *http.Reques
 		return
 	}
 
-	member := room.CreateMember(body.Payload)
-
-	if member == nil {
+	if member := room.CreateMember(body.Payload); member == nil {
 		writer.WriteHeader(403)
 		return
 	}
