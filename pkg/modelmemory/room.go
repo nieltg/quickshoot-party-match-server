@@ -2,6 +2,7 @@ package modelmemory
 
 import (
 	"sync"
+	"sync/atomic"
 
 	"github.com/nieltg/quickshoot-party-match-server/pkg/model"
 )
@@ -12,6 +13,8 @@ type room struct {
 	events  *roomEventFeed
 	members sync.Map
 
+	counter int32
+
 	deleteChannel chan struct{}
 }
 
@@ -20,6 +23,7 @@ func newRoom(ID uint64, payload model.RoomPayload) *room {
 		id:      ID,
 		payload: payload,
 		events:  newRoomEventFeed(),
+		counter: 0, // TODO: clarifiy if creating room still needs separate request for join / not
 
 		deleteChannel: make(chan struct{}),
 	}
@@ -34,6 +38,7 @@ func (r *room) ID() uint64 {
 func (r *room) CreateMember(payload model.MemberPayload) (m model.Member) {
 	m = &member{payload: payload}
 	r.members.Store(payload.ID, m)
+	atomic.AddInt32(&r.counter, 1)
 
 	r.events.put(model.RoomEventMemberJoin(&model.RoomEventMemberJoinPayload{
 		ID:   payload.ID,
@@ -45,6 +50,7 @@ func (r *room) CreateMember(payload model.MemberPayload) (m model.Member) {
 // DeleteMember removes a member from this room by the member ID.
 func (r *room) DeleteMember(memberID uint64) {
 	r.members.Delete(memberID)
+	atomic.AddInt32(&r.counter, -1)
 
 	r.events.put(model.RoomEventMemberLeave(&model.RoomEventMemberLeavePayload{
 		MemberID: memberID,
@@ -68,4 +74,17 @@ func (r *room) Events() model.RoomEventFeed {
 
 func (r *room) MaximumCapacity() uint {
 	return r.payload.MaxMemberCount
+}
+
+// Size returns size of the member map
+func (r *room) Size() int32 {
+	return r.counter
+}
+
+func (r *room) IsFull() bool {
+	return string(r.Size()) == string(r.MaximumCapacity())
+}
+
+func (r *room) StartGame() {
+	r.events.put(model.RoomEventGameBegin())
 }
