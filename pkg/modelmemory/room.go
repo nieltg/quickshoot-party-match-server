@@ -93,6 +93,5 @@ func (r *room) StartGame() {
 }
 
 func (r *room) IsGameStarted() bool {
-	// TODO: change this shit!
 	return r.game_started
 }
