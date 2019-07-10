@@ -13,7 +13,7 @@ type room struct {
 	events  *roomEventFeed
 	members sync.Map
 
-	mutex sync.RWMutex
+	mutex sync.Mutex
 
 	counter     int32
 	gameStarted bool
@@ -71,7 +71,7 @@ func (r *room) DeleteMember(memberID uint64) {
 	defer r.mutex.Unlock()
 
 	r.members.Delete(memberID)
-	
+
 	atomic.AddInt32(&r.counter, -1)
 
 	r.events.put(model.RoomEventMemberLeave(&model.RoomEventMemberLeavePayload{
