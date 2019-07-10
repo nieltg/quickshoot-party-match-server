@@ -13,21 +13,18 @@ type room struct {
 	events  *roomEventFeed
 	members sync.Map
 
-	mutex sync.RWMutex
-
-	counter     int32
-	gameStarted bool
+	counter      int32
+	counterMutex sync.Mutex
 
 	deleteChannel chan struct{}
 }
 
 func newRoom(ID uint64, payload model.RoomPayload) *room {
 	return &room{
-		id:          ID,
-		payload:     payload,
-		events:      newRoomEventFeed(),
-		counter:     0, // TODO: clarifiy if creating room still needs separate request for join / not
-		gameStarted: false,
+		id:      ID,
+		payload: payload,
+		events:  newRoomEventFeed(),
+		counter: 0,
 
 		deleteChannel: make(chan struct{}),
 	}
@@ -38,19 +35,26 @@ func (r *room) ID() uint64 {
 	return r.id
 }
 
+func (r *room) incrementCounter() bool {
+	r.counterMutex.Lock()
+	defer r.counterMutex.Unlock()
+
+	if r.isFull() {
+		return false
+	}
+
+	atomic.AddInt32(&r.counter, 1)
+	return true
+}
+
 // CreateMember creates a member representation in this room.
 func (r *room) CreateMember(payload model.MemberPayload) (m model.Member) {
-	if r.isFull() {
+	if !r.incrementCounter() {
 		return nil
 	}
 
-	r.mutex.Lock()
-	defer r.mutex.Unlock()
-
 	m = &member{payload: payload}
 	r.members.Store(payload.ID, m)
-
-	atomic.AddInt32(&r.counter, 1)
 
 	r.events.put(model.RoomEventMemberJoin(&model.RoomEventMemberJoinPayload{
 		ID:   payload.ID,
@@ -64,14 +68,26 @@ func (r *room) CreateMember(payload model.MemberPayload) (m model.Member) {
 	return
 }
 
+func (r *room) decrementCounter() bool {
+	r.counterMutex.Lock()
+	defer r.counterMutex.Unlock()
+
+	if r.isGameStarted() {
+		return false
+	}
+
+	atomic.AddInt32(&r.counter, -1)
+	return true
+}
+
 // DeleteMember removes a member from this room by the member ID.
 func (r *room) DeleteMember(memberID uint64) {
-
-	r.mutex.Lock()
-	defer r.mutex.Unlock()
+	if !r.decrementCounter() {
+		return
+	}
 
 	r.members.Delete(memberID)
-	
+
 	atomic.AddInt32(&r.counter, -1)
 
 	r.events.put(model.RoomEventMemberLeave(&model.RoomEventMemberLeavePayload{
@@ -108,10 +124,9 @@ func (r *room) isFull() bool {
 }
 
 func (r *room) startGame() {
-	r.gameStarted = true
 	r.events.put(model.RoomEventGameBegin())
 }
 
 func (r *room) isGameStarted() bool {
-	return r.gameStarted
+	return r.isFull()
 }
