@@ -26,6 +26,9 @@ type Room interface {
 
 	// StartGame method starts the game
 	StartGame()
+
+	//IsGameStarted method returns if the room is already playing game
+	IsGameStarted() bool
 }
 
 // RoomPayload represents payload of a game room.

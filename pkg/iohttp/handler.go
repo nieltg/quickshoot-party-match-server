@@ -94,11 +94,14 @@ func (s *Handler) newRoomMember(writer http.ResponseWriter, request *http.Reques
 		return
 	}
 
-	room.CreateMember(body.Payload)
+	if !room.IsGameStarted() {
+		room.CreateMember(body.Payload)
+	} else {
+		writer.WriteHeader(403)
+		return
+	}
 
 	if room.IsFull() {
 		room.StartGame()
-
-		// TODO: lock users from joining
 	}
 }
