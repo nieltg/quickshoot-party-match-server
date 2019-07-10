@@ -53,5 +53,7 @@ func writeJSON(w http.ResponseWriter, v interface{}) bool {
 		return false
 	}
 
+	w.Header().Set("Content-Type", "application/json")
+
 	return true
 }
