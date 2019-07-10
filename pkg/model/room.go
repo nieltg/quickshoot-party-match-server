@@ -17,6 +17,15 @@ type Room interface {
 
 	// Maximum capacity
 	MaximumCapacity() uint
+
+	// Size returns size of the member map
+	Size() int32
+
+	//IsFull returns boolean whether the room is full / not
+	IsFull() bool
+
+	// StartGame method starts the game
+	StartGame()
 }
 
 // RoomPayload represents payload of a game room.
