@@ -14,6 +14,12 @@ type Room interface {
 
 	// Events returns feed of events happening in this room.
 	Events() RoomEventFeed
+
+	// RecordTapTime records user tap time and return 200 if succeed
+	RecordTapTime(userID uint64, data MemberTapTimePayload) bool
+
+	// FindWinner returns the winner of the room
+	FindWinner() Member
 }
 
 // RoomPayload represents payload of a game room.

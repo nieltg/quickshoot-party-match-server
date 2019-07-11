@@ -24,6 +24,8 @@ func (s *Handler) Handler() http.Handler {
 	router.HandleFunc("/room/{id}/events", s.listRoomEvents).Methods("GET")
 	router.HandleFunc("/room/{id}/member/new", s.newRoomMember).Methods("POST")
 
+	router.HandleFunc("/room/{id}/member/{user_id}/tap", s.registerTapTime).Methods("POST")
+
 	return router
 }
 
@@ -36,8 +38,7 @@ func (s *Handler) newRoom(writer http.ResponseWriter, request *http.Request) {
 	room := s.Domain.CreateRoom(body.Payload)
 
 	response := newRoomResponse{
-		ID:                       room.ID(),
-		MaximumDurationInSeconds: s.Domain.MaximumJoinDurationInSeconds(),
+		ID: room.ID(),
 	}
 
 	writeJSON(writer, response)
@@ -95,6 +96,27 @@ func (s *Handler) newRoomMember(writer http.ResponseWriter, request *http.Reques
 	}
 
 	if member := room.CreateMember(body.Payload); member == nil {
+		writer.WriteHeader(403)
+		return
+	}
+}
+
+func (s *Handler) registerTapTime(writer http.ResponseWriter, request *http.Request) {
+	room := s.fetchRoom(writer, mux.Vars(request)["id"])
+	if room == nil {
+		return
+	}
+
+	userID, error := strconv.ParseUint(mux.Vars(request)["user_id"], 10, 64)
+	if error != nil {
+		return
+	}
+	var body newTapTimeRequest
+	if !decodeJSONBody(writer, request.Body, &body) {
+		return
+	}
+	
+	if room.RecordTapTime(userID, body.Payload) != true {
 		writer.WriteHeader(403)
 		return
 	}
