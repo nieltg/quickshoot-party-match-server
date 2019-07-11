@@ -113,7 +113,7 @@ func (s *Handler) deleteRoomMember(writer http.ResponseWriter, request *http.Req
 		return
 	}
 
-	if member := room.DeleteMember(memberID); member == nil {
+	if !room.DeleteMember(memberID) {
 		writer.WriteHeader(403)
 		return
 	}
