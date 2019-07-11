@@ -21,11 +21,11 @@ type Handler struct {
 func (s *Handler) Handler() http.Handler {
 	router := mux.NewRouter()
 	router.HandleFunc("/room/new", s.newRoom).Methods("POST")
-	router.HandleFunc("/room/{id}/events", s.listRoomEvents).Methods("GET")
-	router.HandleFunc("/room/{id}/member/new", s.newRoomMember).Methods("POST")
-	router.HandleFunc("/room/{id}/member/{user_id}/delete", s.deleteRoomMember).Methods("GET")
+	router.HandleFunc("/room/{roomID}/events", s.listRoomEvents).Methods("GET")
+	router.HandleFunc("/room/{roomID}/member/new", s.newRoomMember).Methods("POST")
+	router.HandleFunc("/room/{roomID}/member/{memberID}/delete", s.deleteRoomMember).Methods("GET")
 
-	router.HandleFunc("/room/{id}/member/{user_id}/tap", s.registerTapTime).Methods("POST")
+	router.HandleFunc("/room/{roomID}/member/{memberID}/tap", s.registerTapTime).Methods("POST")
 
 	return router
 }
@@ -46,7 +46,7 @@ func (s *Handler) newRoom(writer http.ResponseWriter, request *http.Request) {
 }
 
 func (s *Handler) listRoomEvents(writer http.ResponseWriter, request *http.Request) {
-	room := s.fetchRoom(writer, mux.Vars(request)["id"])
+	room := s.fetchRoom(writer, mux.Vars(request)["roomID"])
 	if room == nil {
 		return
 	}
@@ -86,7 +86,7 @@ func (s *Handler) listRoomEvents(writer http.ResponseWriter, request *http.Reque
 }
 
 func (s *Handler) newRoomMember(writer http.ResponseWriter, request *http.Request) {
-	room := s.fetchRoom(writer, mux.Vars(request)["id"])
+	room := s.fetchRoom(writer, mux.Vars(request)["roomID"])
 	if room == nil {
 		return
 	}
@@ -103,29 +103,29 @@ func (s *Handler) newRoomMember(writer http.ResponseWriter, request *http.Reques
 }
 
 func (s *Handler) deleteRoomMember(writer http.ResponseWriter, request *http.Request) {
-	room := s.fetchRoom(writer, mux.Vars(request)["id"])
+	room := s.fetchRoom(writer, mux.Vars(request)["roomID"])
 	if room == nil {
 		return
 	}
 
-	userID, error := strconv.ParseUint(mux.Vars(request)["user_id"], 10, 64)
+	memberID, error := strconv.ParseUint(mux.Vars(request)["memberID"], 10, 64)
 	if error != nil {
 		return
 	}
 
-	if member := room.DeleteMember(userID); member == nil {
+	if member := room.DeleteMember(memberID); member == nil {
 		writer.WriteHeader(403)
 		return
 	}
 }
 
 func (s *Handler) registerTapTime(writer http.ResponseWriter, request *http.Request) {
-	room := s.fetchRoom(writer, mux.Vars(request)["id"])
+	room := s.fetchRoom(writer, mux.Vars(request)["roomID"])
 	if room == nil {
 		return
 	}
 
-	userID, error := strconv.ParseUint(mux.Vars(request)["user_id"], 10, 64)
+	memberID, error := strconv.ParseUint(mux.Vars(request)["memberID"], 10, 64)
 	if error != nil {
 		return
 	}
@@ -134,7 +134,7 @@ func (s *Handler) registerTapTime(writer http.ResponseWriter, request *http.Requ
 		return
 	}
 
-	if room.RecordTapTime(userID, body.Payload) != true {
+	if room.RecordTapTime(memberID, body.Payload) != true {
 		writer.WriteHeader(403)
 		return
 	}
