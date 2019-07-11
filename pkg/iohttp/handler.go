@@ -23,7 +23,7 @@ func (s *Handler) Handler() http.Handler {
 	router.HandleFunc("/room/new", s.newRoom).Methods("POST")
 	router.HandleFunc("/room/{roomID}/events", s.listRoomEvents).Methods("GET")
 	router.HandleFunc("/room/{roomID}/member/new", s.newRoomMember).Methods("POST")
-	router.HandleFunc("/room/{roomID}/member/{memberID}/delete", s.deleteRoomMember).Methods("GET")
+	router.HandleFunc("/room/{roomID}/member/{memberID}", s.deleteRoomMember).Methods("DELETE")
 
 	router.HandleFunc("/room/{roomID}/member/{memberID}/tap", s.registerTapTime).Methods("POST")
 
