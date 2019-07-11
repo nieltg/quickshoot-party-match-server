@@ -17,9 +17,6 @@ type Room interface {
 
 	// RecordTapTime records user tap time and return 200 if succeed
 	RecordTapTime(userID uint64, data MemberTapTimePayload) bool
-
-	// FindWinner returns the winner of the room
-	FindWinner() Member
 }
 
 // RoomPayload represents payload of a game room.
