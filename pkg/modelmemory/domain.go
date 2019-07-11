@@ -44,8 +44,3 @@ func (domain *Domain) Room(ID uint64) model.Room {
 
 	return value.(*room)
 }
-
-// MaximumJoinDurationInSeconds returns join maximum durations
-func (domain *Domain) MaximumJoinDurationInSeconds() float64 {
-	return domain.JoinMaxDuration.Seconds()
-}
