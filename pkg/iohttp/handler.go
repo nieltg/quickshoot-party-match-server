@@ -115,7 +115,7 @@ func (s *Handler) registerTapTime(writer http.ResponseWriter, request *http.Requ
 	if !decodeJSONBody(writer, request.Body, &body) {
 		return
 	}
-	
+
 	if room.RecordTapTime(userID, body.Payload) != true {
 		writer.WriteHeader(403)
 		return

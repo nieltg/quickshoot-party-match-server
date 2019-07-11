@@ -2,7 +2,7 @@ package model
 
 // Member represents a member of game room.
 type Member interface {
-	RegisterTapTime(tapTimeMilis uint64)
+	Payload() MemberPayload
 }
 
 // MemberPayload represents payload of a room member.
