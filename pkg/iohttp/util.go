@@ -27,10 +27,10 @@ func (s *Handler) fetchRoom(writer http.ResponseWriter, roomIDStr string) model.
 	return room
 }
 
-func decodeJSONBody(writer http.ResponseWriter, body io.ReadCloser, v interface{}) bool {
+func decodeJSONBody(writer http.ResponseWriter, body io.ReadCloser, value interface{}) bool {
 	decoder := json.NewDecoder(body)
 
-	if err := decoder.Decode(v); err != nil {
+	if err := decoder.Decode(value); err != nil {
 		log.Println("Unable to decode body:", err)
 		writer.WriteHeader(500)
 		return false
@@ -39,8 +39,8 @@ func decodeJSONBody(writer http.ResponseWriter, body io.ReadCloser, v interface{
 	return true
 }
 
-func writeJSON(writer http.ResponseWriter, v interface{}) bool {
-	data, err := json.Marshal(v)
+func writeJSON(writer http.ResponseWriter, value interface{}) bool {
+	data, err := json.Marshal(value)
 	if err != nil {
 		log.Println("Unable to marshal JSON output:", err)
 		writer.WriteHeader(500)
