@@ -7,13 +7,15 @@ import (
 )
 
 type room struct {
-	id      uint64
-	payload model.RoomPayload
-	events  *roomEventFeed
-	members sync.Map
+	id       uint64
+	payload  model.RoomPayload
+	events   *roomEventFeed
+	members  sync.Map          //key: userID, value: user object
+	tapTimes map[uint64]uint64 //key: userID, value: tap time
 
 	memberCount      uint64
 	memberCountMutex sync.Mutex
+	tapTimesMutex    sync.RWMutex
 
 	deleteChannel chan struct{}
 }
@@ -23,6 +25,7 @@ func newRoom(ID uint64, payload model.RoomPayload) *room {
 		id:      ID,
 		payload: payload,
 		events:  newRoomEventFeed(),
+		tapTimes: make(map[uint64]uint64),
 
 		deleteChannel: make(chan struct{}),
 	}
@@ -113,4 +116,44 @@ func (r *room) Member(memberID uint64) model.Member {
 // Events returns feed of events happening in this room.
 func (r *room) Events() model.RoomEventFeed {
 	return r.events
+}
+
+func (r *room) RecordTapTime(userID uint64, data model.MemberTapTimePayload) bool {
+	r.tapTimesMutex.Lock()
+	defer r.tapTimesMutex.Unlock()
+
+	if !r.isRoomFull() {
+		return false
+	}
+
+	r.tapTimes[userID] = uint64(data.TimeInMilis)
+
+	r.events.put(model.RoomEventMemberTapTime(&model.RoomEventMemberTapTimePayload{
+		MemberID: userID,
+		TapTime:  data.TimeInMilis,
+	}))
+
+	return true
+}
+
+func (r *room) FindWinner() model.Member {
+	r.tapTimesMutex.RLock()
+	defer r.tapTimesMutex.RUnlock()
+
+	if uint64(len(r.tapTimes)) < r.memberCount {
+		return nil
+	}
+
+	var winnerUserTime uint64 = (0x3f3f3f3f)
+	var winnerUserID uint64
+	for userID, time := range r.tapTimes {
+		if time < winnerUserTime {
+			winnerUserTime = time
+			winnerUserID = userID
+		}
+	}
+
+	member := r.Member(winnerUserID)
+
+	return member
 }
