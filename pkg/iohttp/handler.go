@@ -108,8 +108,8 @@ func (s *Handler) deleteRoomMember(writer http.ResponseWriter, request *http.Req
 		return
 	}
 
-	memberID, error := strconv.ParseUint(mux.Vars(request)["memberID"], 10, 64)
-	if error != nil {
+	memberID, err := strconv.ParseUint(mux.Vars(request)["memberID"], 10, 64)
+	if err != nil {
 		return
 	}
 
@@ -125,8 +125,8 @@ func (s *Handler) registerTapTime(writer http.ResponseWriter, request *http.Requ
 		return
 	}
 
-	memberID, error := strconv.ParseUint(mux.Vars(request)["memberID"], 10, 64)
-	if error != nil {
+	memberID, err := strconv.ParseUint(mux.Vars(request)["memberID"], 10, 64)
+	if err != nil {
 		return
 	}
 	var body newTapTimeRequest
