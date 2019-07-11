@@ -38,5 +38,5 @@ type RoomEventMemberTapTimePayload struct {
 // RoomEventGameEndPayload represents payload for game-end event.
 type RoomEventGameEndPayload struct {
 	BestTapTime uint64
-	Winner Member
+	Winner MemberPayload
 }

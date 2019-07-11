@@ -133,10 +133,11 @@ func (r *room) RecordTapTime(userID uint64, data model.MemberTapTimePayload) boo
 		TapTime:  data.TimeInMilis,
 	}))
 
-	if winnerUserTime, winner := r.findWinner(); winner != nil {
+	winnerUserTime, winner := r.findWinner()
+	if winner != nil {
 		r.events.put(model.RoomEventGameEnd(&model.RoomEventGameEndPayload{
 			BestTapTime: winnerUserTime,
-			Winner: winner,
+			Winner: winner.Payload(),
 		}))
 	}
 
@@ -144,10 +145,7 @@ func (r *room) RecordTapTime(userID uint64, data model.MemberTapTimePayload) boo
 }
 
 func (r *room) findWinner() (uint64, model.Member) {
-	r.tapTimesMutex.RLock()
-	defer r.tapTimesMutex.RUnlock()
-
-	if uint64(len(r.tapTimes)) < r.memberCount {
+	if uint64(len(r.tapTimes)) != r.memberCount {
 		return (0x3f3f3f3f), nil
 	}
 

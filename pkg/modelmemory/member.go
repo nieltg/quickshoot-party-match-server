@@ -6,6 +6,6 @@ type member struct {
 	payload model.MemberPayload
 }
 
-func (m *member) RegisterTapTime(tapTimeMilis uint64) {
-	// TODO: Do something here.
+func (m *member) Payload() model.MemberPayload {
+	return m.payload
 }
