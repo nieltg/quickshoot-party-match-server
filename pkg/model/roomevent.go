@@ -32,6 +32,7 @@ type RoomEventMemberLeavePayload struct {
 // RoomEventMemberTapTimePayload represents payload for member-tap-time event.
 type RoomEventMemberTapTimePayload struct {
 	MemberID uint64
+	TapTime uint64
 }
 
 // RoomEventGameEndPayload represents payload for game-end event.
