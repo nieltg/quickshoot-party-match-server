@@ -22,9 +22,9 @@ type room struct {
 
 func newRoom(ID uint64, payload model.RoomPayload) *room {
 	return &room{
-		id:      ID,
-		payload: payload,
-		events:  newRoomEventFeed(),
+		id:       ID,
+		payload:  payload,
+		events:   newRoomEventFeed(),
 		tapTimes: make(map[uint64]uint64),
 
 		deleteChannel: make(chan struct{}),
@@ -91,16 +91,20 @@ func (r *room) decrMemberCountIfAllowed() bool {
 }
 
 // DeleteMember removes a member from this room by the member ID.
-func (r *room) DeleteMember(memberID uint64) {
+func (r *room) DeleteMember(memberID uint64) model.Member {
 	if !r.decrMemberCountIfAllowed() {
-		return
+		return nil
 	}
+
+	m := r.Member(memberID)
 
 	r.members.Delete(memberID)
 
 	r.events.put(model.RoomEventMemberLeave(&model.RoomEventMemberLeavePayload{
 		MemberID: memberID,
 	}))
+
+	return m
 }
 
 // Member finds a member based on the member ID or returns nil if not found.
@@ -137,7 +141,7 @@ func (r *room) RecordTapTime(userID uint64, data model.MemberTapTimePayload) boo
 	if winner != nil {
 		r.events.put(model.RoomEventGameEnd(&model.RoomEventGameEndPayload{
 			BestTapTime: winnerUserTime,
-			Winner: winner.Payload(),
+			Winner:      winner.Payload(),
 		}))
 	}
 

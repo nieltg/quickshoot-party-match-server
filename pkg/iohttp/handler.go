@@ -23,6 +23,7 @@ func (s *Handler) Handler() http.Handler {
 	router.HandleFunc("/room/new", s.newRoom).Methods("POST")
 	router.HandleFunc("/room/{id}/events", s.listRoomEvents).Methods("GET")
 	router.HandleFunc("/room/{id}/member/new", s.newRoomMember).Methods("POST")
+	router.HandleFunc("/room/{id}/member/{user_id}/delete", s.deleteRoomMember).Methods("GET")
 
 	router.HandleFunc("/room/{id}/member/{user_id}/tap", s.registerTapTime).Methods("POST")
 
@@ -96,6 +97,23 @@ func (s *Handler) newRoomMember(writer http.ResponseWriter, request *http.Reques
 	}
 
 	if member := room.CreateMember(body.Payload); member == nil {
+		writer.WriteHeader(403)
+		return
+	}
+}
+
+func (s *Handler) deleteRoomMember(writer http.ResponseWriter, request *http.Request) {
+	room := s.fetchRoom(writer, mux.Vars(request)["id"])
+	if room == nil {
+		return
+	}
+
+	userID, error := strconv.ParseUint(mux.Vars(request)["user_id"], 10, 64)
+	if error != nil {
+		return
+	}
+
+	if member := room.DeleteMember(userID); member == nil {
 		writer.WriteHeader(403)
 		return
 	}
