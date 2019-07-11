@@ -126,7 +126,7 @@ func (r *room) RecordTapTime(userID uint64, data model.MemberTapTimePayload) boo
 		return false
 	}
 
-	r.tapTimes[userID] = uint64(data.TimeInMilis)
+	r.tapTimes[userID] = data.TimeInMilis
 
 	r.events.put(model.RoomEventMemberTapTime(&model.RoomEventMemberTapTimePayload{
 		MemberID: userID,
