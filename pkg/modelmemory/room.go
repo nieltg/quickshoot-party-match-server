@@ -91,12 +91,10 @@ func (r *room) decrMemberCountIfAllowed() bool {
 }
 
 // DeleteMember removes a member from this room by the member ID.
-func (r *room) DeleteMember(memberID uint64) model.Member {
+func (r *room) DeleteMember(memberID uint64) bool {
 	if !r.decrMemberCountIfAllowed() {
-		return nil
+		return false
 	}
-
-	m := r.Member(memberID)
 
 	r.members.Delete(memberID)
 
@@ -104,7 +102,7 @@ func (r *room) DeleteMember(memberID uint64) model.Member {
 		MemberID: memberID,
 	}))
 
-	return m
+	return true
 }
 
 // Member finds a member based on the member ID or returns nil if not found.
