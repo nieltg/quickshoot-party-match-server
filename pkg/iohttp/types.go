@@ -7,8 +7,7 @@ type newRoomRequest struct {
 }
 
 type newRoomResponse struct {
-	ID                       uint64
-	MaximumDurationInSeconds float64
+	ID uint64
 }
 
 type roomEventsResponse struct {
@@ -18,4 +17,8 @@ type roomEventsResponse struct {
 
 type newRoomMemberRequest struct {
 	Payload model.MemberPayload
+}
+
+type newTapTimeRequest struct {
+	Payload model.MemberTapTimePayload
 }
