@@ -2,6 +2,7 @@ package modelmemory
 
 import (
 	"sync"
+	"math"
 
 	"github.com/nieltg/quickshoot-party-match-server/pkg/model"
 )
@@ -20,8 +21,6 @@ type room struct {
 
 	deleteChannel chan struct{}
 }
-
-const maxTime uint64 = 0x3f3f3f3f
 
 func newRoom(ID uint64, payload model.RoomPayload) *room {
 	return &room{
@@ -151,10 +150,10 @@ func (r *room) RecordTapTime(userID uint64, data model.MemberTapTimePayload) boo
 
 func (r *room) findWinner() (uint64, model.Member) {
 	if uint64(len(r.tapTimes)) != r.memberCount {
-		return maxTime, nil
+		return math.MaxUint64, nil
 	}
 
-	var winnerUserTime uint64 = maxTime
+	var winnerUserTime uint64 = math.MaxUint64
 	var winnerUserID uint64
 	for userID, time := range r.tapTimes {
 		if time < winnerUserTime {
