@@ -7,18 +7,21 @@ import (
 )
 
 type room struct {
-	id       uint64
-	payload  model.RoomPayload
-	events   *roomEventFeed
-	members  sync.Map          //key: userID, value: user object
-	tapTimes map[uint64]uint64 //key: userID, value: tap time
+	id          uint64
+	payload     model.RoomPayload
+	events      *roomEventFeed
+	memberCount uint64
 
-	memberCount      uint64
-	memberCountMutex sync.Mutex
-	tapTimesMutex    sync.RWMutex
+	members      sync.Map //key: userID, value: user object
+	membersMutex sync.RWMutex
+
+	tapTimes      map[uint64]uint64 //key: userID, value: tap time
+	tapTimesMutex sync.RWMutex
 
 	deleteChannel chan struct{}
 }
+
+const maxTime uint64 = 0x3f3f3f3f
 
 func newRoom(ID uint64, payload model.RoomPayload) *room {
 	return &room{
@@ -41,9 +44,6 @@ func (r *room) isRoomFull() bool {
 }
 
 func (r *room) incrMemberCountIfAllowed() bool {
-	r.memberCountMutex.Lock()
-	defer r.memberCountMutex.Unlock()
-
 	if r.isRoomFull() {
 		return false
 	}
@@ -58,7 +58,10 @@ func (r *room) startGame() {
 
 // CreateMember creates a member representation in this room.
 func (r *room) CreateMember(payload model.MemberPayload) (m model.Member) {
-	if !r.incrMemberCountIfAllowed() {
+	r.membersMutex.Lock()
+	defer r.membersMutex.Unlock()
+
+	if r.incrMemberCountIfAllowed() != true {
 		return nil
 	}
 
@@ -78,9 +81,6 @@ func (r *room) CreateMember(payload model.MemberPayload) (m model.Member) {
 }
 
 func (r *room) decrMemberCountIfAllowed() bool {
-	r.memberCountMutex.Lock()
-	defer r.memberCountMutex.Unlock()
-
 	// Full means game has been started.
 	if r.isRoomFull() {
 		return false
@@ -92,6 +92,9 @@ func (r *room) decrMemberCountIfAllowed() bool {
 
 // DeleteMember removes a member from this room by the member ID.
 func (r *room) DeleteMember(memberID uint64) bool {
+	r.membersMutex.Lock()
+	defer r.membersMutex.Unlock()
+
 	if !r.decrMemberCountIfAllowed() {
 		return false
 	}
@@ -148,10 +151,10 @@ func (r *room) RecordTapTime(userID uint64, data model.MemberTapTimePayload) boo
 
 func (r *room) findWinner() (uint64, model.Member) {
 	if uint64(len(r.tapTimes)) != r.memberCount {
-		return (0x3f3f3f3f), nil
+		return maxTime, nil
 	}
 
-	var winnerUserTime uint64 = (0x3f3f3f3f)
+	var winnerUserTime uint64 = maxTime
 	var winnerUserID uint64
 	for userID, time := range r.tapTimes {
 		if time < winnerUserTime {
