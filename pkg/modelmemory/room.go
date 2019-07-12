@@ -3,6 +3,7 @@ package modelmemory
 import (
 	"sync"
 	"math"
+	"time"
 
 	"github.com/nieltg/quickshoot-party-match-server/pkg/model"
 )
@@ -143,6 +144,12 @@ func (r *room) RecordTapTime(userID uint64, data model.MemberTapTimePayload) boo
 			BestTapTime: winnerUserTime,
 			Winner:      winner.Payload(),
 		}))
+
+		select {
+		case <- time.After(2 * time.Second):
+		}
+
+		close(r.deleteChannel)
 	}
 
 	return true
