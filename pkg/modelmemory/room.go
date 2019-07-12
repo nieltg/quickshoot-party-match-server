@@ -146,7 +146,7 @@ func (r *room) RecordTapTime(userID uint64, data model.MemberTapTimePayload) boo
 		}))
 
 		select {
-		case <- time.After(2 * time.Second):
+		case <- time.After(3 * time.Second):
 		}
 
 		close(r.deleteChannel)
