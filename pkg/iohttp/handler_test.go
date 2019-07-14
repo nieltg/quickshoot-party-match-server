@@ -59,7 +59,6 @@ func TestCreateRoom(t *testing.T) {
 	roomID = responseData.ID
 }
 
-//TODO: fix this test, I don't know how to inject roomID into request...
 func TestJoinRoom(t *testing.T) {
 	TestCreateRoom(t)
 
