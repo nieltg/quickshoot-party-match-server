@@ -32,7 +32,7 @@ func (s *Handler) Handler() http.Handler {
 
 func (s *Handler) newRoom(writer http.ResponseWriter, request *http.Request) {
 	var body newRoomRequest
-	if !decodeJSONBody(writer, request.Body, &body) {
+	if decodeJSONBody(writer, request.Body, &body) != true {
 		return
 	}
 
@@ -92,11 +92,11 @@ func (s *Handler) newRoomMember(writer http.ResponseWriter, request *http.Reques
 	}
 
 	var body newRoomMemberRequest
-	if !decodeJSONBody(writer, request.Body, &body) {
+	if decodeJSONBody(writer, request.Body, &body) != true {
 		return
 	}
 
-	if member := room.CreateMember(body.Payload); member == nil {
+	if room.CreateMember(body.Payload) != true {
 		writer.WriteHeader(403)
 		return
 	}
@@ -113,7 +113,7 @@ func (s *Handler) deleteRoomMember(writer http.ResponseWriter, request *http.Req
 		return
 	}
 
-	if !room.DeleteMember(memberID) {
+	if room.DeleteMember(memberID) != true {
 		writer.WriteHeader(403)
 		return
 	}
