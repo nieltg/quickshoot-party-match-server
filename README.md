@@ -1,6 +1,6 @@
 # Quick Shoot Match Server
 
-A server to facilitate multiplayer match mode of Quick Shoot game.
+A server to facilitate multiplayer match mode of [Quick Shoot](https://github.com/iamdejan/QuickShoot_Party) game.
 
 ## Getting Started
 
