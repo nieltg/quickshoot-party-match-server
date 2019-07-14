@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"fmt"
 
+	"github.com/gorilla/mux"
 	"github.com/nieltg/quickshoot-party-match-server/pkg/modelmemory"
 	"github.com/nieltg/quickshoot-party-match-server/pkg/model"
 )
@@ -74,7 +75,7 @@ func TestJoinRoom(t *testing.T) {
 	}
 
 	request, error := http.NewRequest(http.MethodPost, fmt.Sprintf("/room/new/%d/member/new", roomID), bytes.NewBuffer(jsonSent))
-
+	request = mux.SetURLVars(request, map[string]string{"roomID": "1"})
 	if error != nil {
 		t.Fatal(request, " request can't be created!")
 	}
@@ -86,5 +87,25 @@ func TestJoinRoom(t *testing.T) {
 	server.ServeHTTP(response, request)
 	if status := response.Code; status != http.StatusOK {
 		t.Fatal("Can't join room! Status", status)
+	}
+}
+
+func TestLeaveRoom(t *testing.T) {
+	TestJoinRoom(t)
+
+	request, error := http.NewRequest(http.MethodDelete, fmt.Sprintf("/room/new/%d/member/%d", roomID, 1), nil)
+	request = mux.SetURLVars(request, map[string]string{"roomID": fmt.Sprintf("%d", roomID), "memberID": "1"})
+	fmt.Println(mux.Vars(request))
+	if error != nil {
+		t.Fatal(request, " request can't be created!")
+	}
+
+	response := httptest.NewRecorder()
+
+	server := http.HandlerFunc(handler.deleteRoomMember)
+
+	server.ServeHTTP(response, request)
+	if status := response.Code; status != http.StatusOK {
+		t.Fatal("Can't leave room! Status", status)
 	}
 }
