@@ -20,12 +20,12 @@ type Handler struct {
 // Handler returns new handler for HTTP requests.
 func (s *Handler) Handler() http.Handler {
 	router := mux.NewRouter()
-	router.HandleFunc("/room/new", s.newRoom).Methods("POST")
-	router.HandleFunc("/room/{roomID}/events", s.listRoomEvents).Methods("GET")
-	router.HandleFunc("/room/{roomID}/member/new", s.newRoomMember).Methods("POST")
-	router.HandleFunc("/room/{roomID}/member/{memberID}", s.deleteRoomMember).Methods("DELETE")
+	router.HandleFunc("/room/new", s.newRoom).Methods(http.MethodPost)
+	router.HandleFunc("/room/{roomID}/events", s.listRoomEvents).Methods(http.MethodGet)
+	router.HandleFunc("/room/{roomID}/member/new", s.newRoomMember).Methods(http.MethodPost)
+	router.HandleFunc("/room/{roomID}/member/{memberID}", s.deleteRoomMember).Methods(http.MethodDelete)
 
-	router.HandleFunc("/room/{roomID}/member/{memberID}/tap", s.registerTapTime).Methods("POST")
+	router.HandleFunc("/room/{roomID}/member/{memberID}/tap", s.registerTapTime).Methods(http.MethodPost)
 
 	return router
 }
