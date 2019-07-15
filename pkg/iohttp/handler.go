@@ -61,7 +61,7 @@ func (s *Handler) listRoomEvents(writer http.ResponseWriter, request *http.Reque
 
 		if lastID, err = strconv.Atoi(lastIDStr); err != nil {
 			log.Println("Unable to parse last feed ID:", err)
-			writer.WriteHeader(500)
+			writer.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 	}
@@ -97,7 +97,7 @@ func (s *Handler) newRoomMember(writer http.ResponseWriter, request *http.Reques
 	}
 
 	if room.CreateMember(body.Payload) != true {
-		writer.WriteHeader(403)
+		writer.WriteHeader(http.StatusForbidden)
 		return
 	}
 }
@@ -114,7 +114,7 @@ func (s *Handler) deleteRoomMember(writer http.ResponseWriter, request *http.Req
 	}
 
 	if room.DeleteMember(memberID) != true {
-		writer.WriteHeader(403)
+		writer.WriteHeader(http.StatusForbidden)
 		return
 	}
 }
@@ -135,7 +135,7 @@ func (s *Handler) registerTapTime(writer http.ResponseWriter, request *http.Requ
 	}
 
 	if room.RecordTapTime(memberID, body.Payload) != true {
-		writer.WriteHeader(403)
+		writer.WriteHeader(http.StatusForbidden)
 		return
 	}
 }

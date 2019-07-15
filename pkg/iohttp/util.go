@@ -14,13 +14,13 @@ func (s *Handler) fetchRoom(writer http.ResponseWriter, roomIDStr string) model.
 	roomID, err := strconv.ParseUint(roomIDStr, 10, 64)
 	if err != nil {
 		log.Println("Unable to parse room ID:", err)
-		writer.WriteHeader(500)
+		writer.WriteHeader(http.StatusInternalServerError)
 		return nil
 	}
 
 	room := s.Domain.Room(roomID)
 	if room == nil {
-		writer.WriteHeader(404)
+		writer.WriteHeader(http.StatusNotFound)
 		return nil
 	}
 
@@ -32,7 +32,7 @@ func decodeJSONBody(writer http.ResponseWriter, body io.ReadCloser, value interf
 
 	if err := decoder.Decode(value); err != nil {
 		log.Println("Unable to decode body:", err)
-		writer.WriteHeader(500)
+		writer.WriteHeader(http.StatusInternalServerError)
 		return false
 	}
 
@@ -43,7 +43,7 @@ func writeJSON(writer http.ResponseWriter, value interface{}) bool {
 	data, err := json.Marshal(value)
 	if err != nil {
 		log.Println("Unable to marshal JSON output:", err)
-		writer.WriteHeader(500)
+		writer.WriteHeader(http.StatusInternalServerError)
 		return false
 	}
 
@@ -51,7 +51,7 @@ func writeJSON(writer http.ResponseWriter, value interface{}) bool {
 
 	if _, err = writer.Write(data); err != nil {
 		log.Println("Unable to write response:", err)
-		writer.WriteHeader(500)
+		writer.WriteHeader(http.StatusInternalServerError)
 		return false
 	}
 
