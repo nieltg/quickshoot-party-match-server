@@ -40,7 +40,7 @@ func (domain *Domain) autoDeleteRoom(room *room) {
 			for id := range room.tapTimes {
 				membersClone.Delete(id)
 			}
-			//TODO: I believe this process blocks query for time
+			//TODO: I believe this process blocks query for winner
 			membersClone.Range(func(key, value interface{}) bool {
 				id, _ := strconv.ParseUint(fmt.Sprintf("%d", key), 10, 64)
 				recordStatus := room.RecordTapTime(id, model.MemberTapTimePayload{
