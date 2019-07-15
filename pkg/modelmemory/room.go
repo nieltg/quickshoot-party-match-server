@@ -127,7 +127,7 @@ func (r *room) RecordTapTime(userID uint64, data model.MemberTapTimePayload) boo
 	r.tapTimesMutex.Lock()
 	defer r.tapTimesMutex.Unlock()
 
-	if !r.isRoomFull() {
+	if r.isRoomFull() != true {
 		return false
 	}
 
