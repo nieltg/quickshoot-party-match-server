@@ -5,14 +5,14 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"encoding/json"
-	"time"
 	"bytes"
+	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/nieltg/quickshoot-party-match-server/pkg/modelmemory"
 	"github.com/nieltg/quickshoot-party-match-server/pkg/model"
+	"github.com/nieltg/quickshoot-party-match-server/pkg/modelmemory"
 )
 
 var handler = Handler{
@@ -29,7 +29,7 @@ var roomID uint64
 func TestCreateRoom(t *testing.T) {
 	requestData := newRoomRequest{
 		Payload: model.RoomPayload{
-			MaxMemberCount: 4,
+			MaxMemberCount: 2,
 		},
 	}
 
@@ -53,18 +53,18 @@ func TestCreateRoom(t *testing.T) {
 	}
 	var responseData newRoomResponse
 	if error := json.Unmarshal(response.Body.Bytes(), &responseData); error != nil {
-		t.Fatal("WRONG RETURN BRO!");
+		t.Fatal("WRONG RETURN BRO!")
 	}
 
 	roomID = responseData.ID
 }
 
-func TestJoinRoom(t *testing.T) {
+func TestFirstPlayerJoinRoom(t *testing.T) {
 	TestCreateRoom(t)
 
 	requestData := newRoomMemberRequest{
 		Payload: model.MemberPayload{
-			ID: 1,
+			ID:   1,
 			Name: "Giovanni Dejan",
 		},
 	}
@@ -74,7 +74,7 @@ func TestJoinRoom(t *testing.T) {
 	}
 
 	request, error := http.NewRequest(http.MethodPost, fmt.Sprintf("/room/new/%d/member/new", roomID), bytes.NewBuffer(jsonSent))
-	request = mux.SetURLVars(request, map[string]string{"roomID": "1"})
+	request = mux.SetURLVars(request, map[string]string{"roomID": fmt.Sprintf("%d", roomID)})
 	if error != nil {
 		t.Fatal(request, " request can't be created!")
 	}
@@ -89,8 +89,11 @@ func TestJoinRoom(t *testing.T) {
 	}
 }
 
-func TestLeaveRoom(t *testing.T) {
-	TestJoinRoom(t)
+func TestFirstPlayerLeaveRoom(t *testing.T) {
+	if roomID == 0 {
+		TestCreateRoom(t)
+	}
+	TestFirstPlayerJoinRoom(t)
 
 	request, error := http.NewRequest(http.MethodDelete, fmt.Sprintf("/room/new/%d/member/%d", roomID, 1), nil)
 	request = mux.SetURLVars(request, map[string]string{"roomID": fmt.Sprintf("%d", roomID), "memberID": "1"})
@@ -106,5 +109,110 @@ func TestLeaveRoom(t *testing.T) {
 	server.ServeHTTP(response, request)
 	if status := response.Code; status != http.StatusOK {
 		t.Fatal("Can't leave room! Status", status)
+	}
+}
+
+func TestSecondPlayerJoinRoom(t *testing.T) {
+	if roomID == 0 {
+		TestCreateRoom(t)
+	}
+
+	requestData := newRoomMemberRequest{
+		Payload: model.MemberPayload{
+			ID:   2,
+			Name: "Daniel Pintara",
+		},
+	}
+	jsonSent, error := json.Marshal(requestData)
+	if error != nil {
+		t.Fatal("Fail to create jsonSent data!")
+	}
+
+	request, error := http.NewRequest(http.MethodPost, fmt.Sprintf("/room/new/%d/member/new", roomID), bytes.NewBuffer(jsonSent))
+	request = mux.SetURLVars(request, map[string]string{"roomID": fmt.Sprintf("%d", roomID)})
+	if error != nil {
+		t.Fatal(request, " request can't be created!")
+	}
+
+	response := httptest.NewRecorder()
+
+	server := http.HandlerFunc(handler.newRoomMember)
+
+	server.ServeHTTP(response, request)
+	if status := response.Code; status != http.StatusOK {
+		t.Fatal("Can't join room! Status", status)
+	}
+}
+
+func TestJoinAndLeaveRoomNotifs(t *testing.T) {
+	TestFirstPlayerLeaveRoom(t)
+
+	request, error := http.NewRequest(http.MethodGet, fmt.Sprintf("/room/%d/events", roomID), nil)
+	request = mux.SetURLVars(request, map[string]string{"roomID": fmt.Sprintf("%d", roomID)})
+	if error != nil {
+		t.Fatal(request, " request can't be created!")
+	}
+
+	response := httptest.NewRecorder()
+
+	server := http.HandlerFunc(handler.listRoomEvents)
+
+	server.ServeHTTP(response, request)
+	if status := response.Code; status != http.StatusOK {
+		t.Fatal("Can't get list of room events! Status", status)
+	}
+}
+
+func TestGameForTwoGamers(t *testing.T) {
+	TestFirstPlayerJoinRoom(t)
+	TestSecondPlayerJoinRoom(t)
+
+	var requestsData []newTapTimeRequest
+	requestsData = append(requestsData, newTapTimeRequest{
+		Payload: model.MemberTapTimePayload{
+			TimeInMilis: 250,
+		},
+	})
+	requestsData = append(requestsData, newTapTimeRequest{
+		Payload: model.MemberTapTimePayload{
+			TimeInMilis: 249,
+		},
+	})
+
+	for i, requestData := range requestsData {
+		jsonSent, error := json.Marshal(requestData)
+		if error != nil {
+			t.Fatal("Fail to create jsonSent data!")
+		}
+
+		request, error := http.NewRequest(http.MethodPost, fmt.Sprintf("/room/new/%d/member/%d/tap", roomID, (i + 1)), bytes.NewBuffer(jsonSent))
+		request = mux.SetURLVars(request, map[string]string{"roomID": fmt.Sprintf("%d", roomID), "memberID": fmt.Sprintf("%d", (i + 1))})
+		if error != nil {
+			t.Fatal(request, " request can't be created!")
+		}
+
+		response := httptest.NewRecorder()
+
+		server := http.HandlerFunc(handler.registerTapTime)
+
+		server.ServeHTTP(response, request)
+		if status := response.Code; status != http.StatusOK {
+			t.Fatal("User can't tap! Status", status)
+		}
+	}
+
+	request, error := http.NewRequest(http.MethodGet, fmt.Sprintf("/room/%d/events", roomID), nil)
+	request = mux.SetURLVars(request, map[string]string{"roomID": fmt.Sprintf("%d", roomID)})
+	if error != nil {
+		t.Fatal(request, " request can't be created!")
+	}
+
+	response := httptest.NewRecorder()
+
+	server := http.HandlerFunc(handler.listRoomEvents)
+
+	server.ServeHTTP(response, request)
+	if status := response.Code; status != http.StatusOK {
+		t.Fatal("Can't get list of room events! Status", status)
 	}
 }
