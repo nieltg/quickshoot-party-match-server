@@ -57,8 +57,7 @@ func autoTap(room *room) {
 func (domain *Domain) autoDeleteRoom(room *room) {
 	select {
 	case <-room.deleteChannel:
-	// case <-time.After(domain.JoinMaxDuration):
-	case <-time.After(10 * time.Second):
+	case <-time.After(domain.JoinMaxDuration):
 		gameBegins := len(room.tapTimes) > 0
 		if gameBegins {
 			autoTap(room)
