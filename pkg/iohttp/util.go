@@ -10,7 +10,7 @@ import (
 	"github.com/nieltg/quickshoot-party-match-server/pkg/model"
 )
 
-func (s *Handler) fetchRoom(writer http.ResponseWriter, roomIDStr string) model.Room {
+func (handler *Handler) fetchRoom(writer http.ResponseWriter, roomIDStr string) model.Room {
 	roomID, err := strconv.ParseUint(roomIDStr, 10, 64)
 	if err != nil {
 		log.Println("Unable to parse room ID:", err)
@@ -18,7 +18,7 @@ func (s *Handler) fetchRoom(writer http.ResponseWriter, roomIDStr string) model.
 		return nil
 	}
 
-	room := s.Domain.Room(roomID)
+	room := handler.Domain.Room(roomID)
 	if room == nil {
 		writer.WriteHeader(http.StatusNotFound)
 		return nil

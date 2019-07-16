@@ -18,25 +18,25 @@ type Handler struct {
 }
 
 // Handler returns new handler for HTTP requests.
-func (s *Handler) Handler() http.Handler {
+func (handler *Handler) Handler() http.Handler {
 	router := mux.NewRouter()
-	router.HandleFunc("/room/new", s.newRoom).Methods(http.MethodPost)
-	router.HandleFunc("/room/{roomID}/events", s.listRoomEvents).Methods(http.MethodGet)
-	router.HandleFunc("/room/{roomID}/member/new", s.newRoomMember).Methods(http.MethodPost)
-	router.HandleFunc("/room/{roomID}/member/{memberID}", s.deleteRoomMember).Methods(http.MethodDelete)
+	router.HandleFunc("/room/new", handler.newRoom).Methods(http.MethodPost)
+	router.HandleFunc("/room/{roomID}/events", handler.listRoomEvents).Methods(http.MethodGet)
+	router.HandleFunc("/room/{roomID}/member/new", handler.newRoomMember).Methods(http.MethodPost)
+	router.HandleFunc("/room/{roomID}/member/{memberID}", handler.deleteRoomMember).Methods(http.MethodDelete)
 
-	router.HandleFunc("/room/{roomID}/member/{memberID}/tap", s.registerTapTime).Methods(http.MethodPost)
+	router.HandleFunc("/room/{roomID}/member/{memberID}/tap", handler.registerTapTime).Methods(http.MethodPost)
 
 	return router
 }
 
-func (s *Handler) newRoom(writer http.ResponseWriter, request *http.Request) {
+func (handler *Handler) newRoom(writer http.ResponseWriter, request *http.Request) {
 	var body newRoomRequest
 	if decodeJSONBody(writer, request.Body, &body) != true {
 		return
 	}
 
-	room := s.Domain.CreateRoom(body.Payload)
+	room := handler.Domain.CreateRoom(body.Payload)
 
 	response := newRoomResponse{
 		ID: room.ID(),
@@ -45,8 +45,8 @@ func (s *Handler) newRoom(writer http.ResponseWriter, request *http.Request) {
 	writeJSON(writer, response)
 }
 
-func (s *Handler) listRoomEvents(writer http.ResponseWriter, request *http.Request) {
-	room := s.fetchRoom(writer, mux.Vars(request)["roomID"])
+func (handler *Handler) listRoomEvents(writer http.ResponseWriter, request *http.Request) {
+	room := handler.fetchRoom(writer, mux.Vars(request)["roomID"])
 	if room == nil {
 		return
 	}
@@ -75,7 +75,7 @@ func (s *Handler) listRoomEvents(writer http.ResponseWriter, request *http.Reque
 		select {
 		case <-waitChannel:
 			notifs, nextLastID, _ = room.Events().List(lastID)
-		case <-time.After(s.DeferredRequestMaxDuration):
+		case <-time.After(handler.DeferredRequestMaxDuration):
 		}
 	}
 
@@ -85,8 +85,8 @@ func (s *Handler) listRoomEvents(writer http.ResponseWriter, request *http.Reque
 	})
 }
 
-func (s *Handler) newRoomMember(writer http.ResponseWriter, request *http.Request) {
-	room := s.fetchRoom(writer, mux.Vars(request)["roomID"])
+func (handler *Handler) newRoomMember(writer http.ResponseWriter, request *http.Request) {
+	room := handler.fetchRoom(writer, mux.Vars(request)["roomID"])
 	if room == nil {
 		return
 	}
@@ -102,8 +102,8 @@ func (s *Handler) newRoomMember(writer http.ResponseWriter, request *http.Reques
 	}
 }
 
-func (s *Handler) deleteRoomMember(writer http.ResponseWriter, request *http.Request) {
-	room := s.fetchRoom(writer, mux.Vars(request)["roomID"])
+func (handler *Handler) deleteRoomMember(writer http.ResponseWriter, request *http.Request) {
+	room := handler.fetchRoom(writer, mux.Vars(request)["roomID"])
 	if room == nil {
 		return
 	}
@@ -119,8 +119,8 @@ func (s *Handler) deleteRoomMember(writer http.ResponseWriter, request *http.Req
 	}
 }
 
-func (s *Handler) registerTapTime(writer http.ResponseWriter, request *http.Request) {
-	room := s.fetchRoom(writer, mux.Vars(request)["roomID"])
+func (handler *Handler) registerTapTime(writer http.ResponseWriter, request *http.Request) {
+	room := handler.fetchRoom(writer, mux.Vars(request)["roomID"])
 	if room == nil {
 		return
 	}

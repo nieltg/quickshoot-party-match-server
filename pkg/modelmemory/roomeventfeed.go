@@ -19,19 +19,19 @@ func newRoomEventFeed() *roomEventFeed {
 	}
 }
 
-func (f *roomEventFeed) put(event model.RoomEvent) {
-	f.itemsMutex.Lock()
-	defer f.itemsMutex.Unlock()
+func (feed *roomEventFeed) put(event model.RoomEvent) {
+	feed.itemsMutex.Lock()
+	defer feed.itemsMutex.Unlock()
 
-	f.items = append(f.items, event)
+	feed.items = append(feed.items, event)
 
-	close(f.waitChannel)
-	f.waitChannel = make(chan struct{})
+	close(feed.waitChannel)
+	feed.waitChannel = make(chan struct{})
 }
 
-func (f *roomEventFeed) List(lastID int) ([]model.RoomEvent, int, <-chan struct{}) {
-	f.itemsMutex.RLock()
-	defer f.itemsMutex.RUnlock()
+func (feed *roomEventFeed) List(lastID int) ([]model.RoomEvent, int, <-chan struct{}) {
+	feed.itemsMutex.RLock()
+	defer feed.itemsMutex.RUnlock()
 
-	return f.items[lastID+1:], len(f.items) - 1, f.waitChannel
+	return feed.items[lastID+1:], len(feed.items) - 1, feed.waitChannel
 }
