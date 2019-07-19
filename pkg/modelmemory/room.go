@@ -110,6 +110,9 @@ func (r *room) DeleteMember(memberID uint64) bool {
 
 	defer func() {
 		if r.isEmpty() {
+			select {
+			case <- time.After(3 * time.Second):
+			}
 			close(r.deleteChannel);
 		}
 	}()
