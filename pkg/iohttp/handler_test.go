@@ -24,6 +24,7 @@ var handler = Handler{
 }
 
 var roomID uint64
+var joinChannel = make(chan int, 2)
 
 //TestCreateRoom is a unit test to test the capability of the system to create a room
 func TestCreateRoom(t *testing.T) {
@@ -83,10 +84,13 @@ func TestFirstPlayerJoinRoom(t *testing.T) {
 
 	server := http.HandlerFunc(handler.newRoomMember)
 
-	server.ServeHTTP(response, request)
-	if status := response.Code; status != http.StatusOK {
-		t.Fatal("Can't join room! Status", status)
-	}
+	func() {
+		joinChannel <- 1
+		server.ServeHTTP(response, request)
+		if status := response.Code; status != http.StatusOK {
+			t.Fatal("Can't join room! Status", status)
+		}
+	}()
 }
 
 func TestFirstPlayerJoinNonexistentRoom(t *testing.T) {
@@ -134,10 +138,12 @@ func TestFirstPlayerLeaveRoom(t *testing.T) {
 
 	server := http.HandlerFunc(handler.deleteRoomMember)
 
-	server.ServeHTTP(response, request)
-	if status := response.Code; status != http.StatusOK {
-		t.Fatal("Can't leave room! Status", status)
-	}
+	go func(){
+		server.ServeHTTP(response, request)
+		if status := response.Code; status != http.StatusOK {
+			t.Fatal("Can't leave room! Status", status)
+		}
+	}()
 }
 
 func TestSecondPlayerJoinRoom(t *testing.T) {
@@ -166,14 +172,19 @@ func TestSecondPlayerJoinRoom(t *testing.T) {
 
 	server := http.HandlerFunc(handler.newRoomMember)
 
-	server.ServeHTTP(response, request)
-	if status := response.Code; status != http.StatusOK {
-		t.Fatal("Can't join room! Status", status)
-	}
+	go func(){
+		joinChannel <- 1
+		server.ServeHTTP(response, request)
+		if status := response.Code; status != http.StatusOK {
+			t.Fatal("Can't join room! Status", status)
+		}
+	}()
 }
 
 func TestJoinAndLeaveRoomNotifs(t *testing.T) {
 	TestFirstPlayerLeaveRoom(t)
+
+	t.Logf("Room ID: %d", roomID)
 
 	request, error := http.NewRequest(http.MethodGet, fmt.Sprintf("/room/%d/events", roomID), nil)
 	request = mux.SetURLVars(request, map[string]string{"roomID": fmt.Sprintf("%d", roomID)})
@@ -193,12 +204,14 @@ func TestJoinAndLeaveRoomNotifs(t *testing.T) {
 
 func TestJoinRoomWhenFull(t *testing.T) {
 	TestFirstPlayerJoinRoom(t)
+	<- joinChannel
 	TestSecondPlayerJoinRoom(t)
+	<- joinChannel
 
 	requestData := newRoomMemberRequest{
 		Payload: model.MemberPayload{
-			ID:   2,
-			Name: "Daniel Pintara",
+			ID:   3,
+			Name: "Daniel Agatan",
 		},
 	}
 	jsonSent, error := json.Marshal(requestData)
@@ -218,13 +231,17 @@ func TestJoinRoomWhenFull(t *testing.T) {
 
 	server.ServeHTTP(response, request)
 	if status := response.Code; status != http.StatusForbidden {
-		t.Fatal("Room is already full! Status", status)
+		t.Fatal("Room isn't full! Status", status)
 	}
 }
 
 func TestGameForTwoGamers(t *testing.T) {
 	TestFirstPlayerJoinRoom(t)
+	<- joinChannel
 	TestSecondPlayerJoinRoom(t)
+	<- joinChannel
+
+	t.Log("Room ID: " + fmt.Sprint(roomID));
 
 	var requestsData []newTapTimeRequest
 	requestsData = append(requestsData, newTapTimeRequest{
@@ -254,12 +271,18 @@ func TestGameForTwoGamers(t *testing.T) {
 
 		server := http.HandlerFunc(handler.registerTapTime)
 
-		server.ServeHTTP(response, request)
-		if status := response.Code; status != http.StatusOK {
-			t.Fatal("User can't tap! Status", status)
-		}
-	}
+		go func(){
+			server.ServeHTTP(response, request)
+			if status := response.Code; status != http.StatusOK {
+				t.Fatal("User can't tap! Status", status)
+			}
+		}()
 
+		listenNotif(t)
+	}
+}
+
+func listenNotif(t *testing.T) {
 	request, error := http.NewRequest(http.MethodGet, fmt.Sprintf("/room/%d/events", roomID), nil)
 	request = mux.SetURLVars(request, map[string]string{"roomID": fmt.Sprintf("%d", roomID)})
 	if error != nil {
