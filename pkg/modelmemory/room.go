@@ -90,6 +90,10 @@ func (r *room) decrMemberCountIfAllowed() bool {
 	return true
 }
 
+func (r *room) isEmpty() bool {
+	return r.memberCount < 1;
+}
+
 // DeleteMember removes a member from this room by the member ID.
 func (r *room) DeleteMember(memberID uint64) bool {
 	r.membersMutex.Lock()
@@ -100,10 +104,15 @@ func (r *room) DeleteMember(memberID uint64) bool {
 	}
 
 	r.members.Delete(memberID)
-
 	r.events.put(model.RoomEventMemberLeave(&model.RoomEventMemberLeavePayload{
 		MemberID: memberID,
 	}))
+
+	defer func() {
+		if r.isEmpty() {
+			close(r.deleteChannel);
+		}
+	}()
 
 	return true
 }
