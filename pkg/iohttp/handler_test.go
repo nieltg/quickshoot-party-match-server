@@ -89,6 +89,34 @@ func TestFirstPlayerJoinRoom(t *testing.T) {
 	}
 }
 
+func TestFirstPlayerJoinNonexistentRoom(t *testing.T) {
+	requestData := newRoomMemberRequest{
+		Payload: model.MemberPayload{
+			ID:   1,
+			Name: "Giovanni Dejan",
+		},
+	}
+	jsonSent, error := json.Marshal(requestData)
+	if error != nil {
+		t.Fatal("Fail to create jsonSent data!")
+	}
+
+	request, error := http.NewRequest(http.MethodPost, fmt.Sprintf("/room/new/%d/member/new", 100), bytes.NewBuffer(jsonSent))
+	request = mux.SetURLVars(request, map[string]string{"roomID": fmt.Sprintf("%d", 100)})
+	if error != nil {
+		t.Fatal(request, " request can't be created!")
+	}
+
+	response := httptest.NewRecorder()
+
+	server := http.HandlerFunc(handler.newRoomMember)
+
+	server.ServeHTTP(response, request)
+	if status := response.Code; status != http.StatusNotFound {
+		t.Fatal("Status isn't 404! Status", status)
+	}
+}
+
 func TestFirstPlayerLeaveRoom(t *testing.T) {
 	if roomID == 0 {
 		TestCreateRoom(t)
@@ -160,6 +188,37 @@ func TestJoinAndLeaveRoomNotifs(t *testing.T) {
 	server.ServeHTTP(response, request)
 	if status := response.Code; status != http.StatusOK {
 		t.Fatal("Can't get list of room events! Status", status)
+	}
+}
+
+func TestJoinRoomWhenFull(t *testing.T) {
+	TestFirstPlayerJoinRoom(t)
+	TestSecondPlayerJoinRoom(t)
+
+	requestData := newRoomMemberRequest{
+		Payload: model.MemberPayload{
+			ID:   2,
+			Name: "Daniel Pintara",
+		},
+	}
+	jsonSent, error := json.Marshal(requestData)
+	if error != nil {
+		t.Fatal("Fail to create jsonSent data!")
+	}
+
+	request, error := http.NewRequest(http.MethodPost, fmt.Sprintf("/room/new/%d/member/new", roomID), bytes.NewBuffer(jsonSent))
+	request = mux.SetURLVars(request, map[string]string{"roomID": fmt.Sprintf("%d", roomID)})
+	if error != nil {
+		t.Fatal(request, " request can't be created!")
+	}
+
+	response := httptest.NewRecorder()
+
+	server := http.HandlerFunc(handler.newRoomMember)
+
+	server.ServeHTTP(response, request)
+	if status := response.Code; status != http.StatusForbidden {
+		t.Fatal("Room is already full! Status", status)
 	}
 }
 
