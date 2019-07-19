@@ -34,6 +34,12 @@ func newRoom(ID uint64, payload model.RoomPayload) *room {
 	}
 }
 
+func waitForCompletion() {
+	select {
+	case <- time.After(3 * time.Second):
+	}
+}
+
 // ID returns the room ID.
 func (r *room) ID() uint64 {
 	return r.id
@@ -110,10 +116,8 @@ func (r *room) DeleteMember(memberID uint64) bool {
 
 	defer func() {
 		if r.isEmpty() {
-			select {
-			case <- time.After(3 * time.Second):
-			}
-			close(r.deleteChannel);
+			waitForCompletion()
+			close(r.deleteChannel)
 		}
 	}()
 
@@ -157,10 +161,7 @@ func (r *room) RecordTapTime(userID uint64, data model.MemberTapTimePayload) boo
 			Winner:      winner.Payload(),
 		}))
 
-		select {
-		case <- time.After(3 * time.Second):
-		}
-
+		waitForCompletion()
 		close(r.deleteChannel)
 	}
 
