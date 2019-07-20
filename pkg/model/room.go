@@ -6,7 +6,7 @@ type Room interface {
 	ID() uint64
 
 	// CreateMember creates a member representation in this room.
-	CreateMember(data MemberPayload) bool
+	CreateMember(data MemberPayload) (bool, uint64)
 	// DeleteMember removes a member from this room by the member ID.
 	DeleteMember(memberID uint64) bool
 	// Member finds a member based on the member ID or returns nil if not found.

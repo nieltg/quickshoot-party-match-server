@@ -96,10 +96,16 @@ func (handler *Handler) newRoomMember(writer http.ResponseWriter, request *http.
 		return
 	}
 
-	if room.CreateMember(body.Payload) != true {
+	var status bool
+	var maximumCapacity uint64
+	if status, maximumCapacity = room.CreateMember(body.Payload); status != true {
 		writer.WriteHeader(http.StatusForbidden)
 		return
 	}
+
+	writeJSON(writer, model.RoomPayload{
+		MaxMemberCount: maximumCapacity,
+	})
 }
 
 func (handler *Handler) deleteRoomMember(writer http.ResponseWriter, request *http.Request) {

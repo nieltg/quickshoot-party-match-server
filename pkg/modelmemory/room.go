@@ -63,12 +63,12 @@ func (r *room) startGame() {
 }
 
 // CreateMember creates a member representation in this room.
-func (r *room) CreateMember(payload model.MemberPayload) bool {
+func (r *room) CreateMember(payload model.MemberPayload) (bool, uint64) {
 	r.membersMutex.Lock()
 	defer r.membersMutex.Unlock()
 
 	if r.incrMemberCountIfAllowed() != true {
-		return false
+		return false, 0
 	}
 
 	m := &member{payload: payload}
@@ -83,7 +83,7 @@ func (r *room) CreateMember(payload model.MemberPayload) bool {
 		r.startGame()
 	}
 
-	return true
+	return true, r.payload.MaxMemberCount
 }
 
 func (r *room) decrMemberCountIfAllowed() bool {
