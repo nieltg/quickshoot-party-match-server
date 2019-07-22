@@ -1,8 +1,8 @@
 package modelmemory
 
 import (
-	"sync"
 	"math"
+	"sync"
 	"time"
 
 	"github.com/nieltg/quickshoot-party-match-server/pkg/model"

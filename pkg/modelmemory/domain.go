@@ -2,11 +2,11 @@ package modelmemory
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
-	"math"
 
 	"github.com/nieltg/quickshoot-party-match-server/pkg/model"
 )
