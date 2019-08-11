@@ -175,9 +175,9 @@ func (r *room) findWinner() (uint64, model.Member) {
 
 	var winnerUserTime uint64 = math.MaxUint64
 	var winnerUserID uint64
-	for userID, time := range r.tapTimes {
-		if time < winnerUserTime {
-			winnerUserTime = time
+	for userID, tapTime := range r.tapTimes {
+		if tapTime < winnerUserTime {
+			winnerUserTime = tapTime
 			winnerUserID = userID
 		}
 	}
