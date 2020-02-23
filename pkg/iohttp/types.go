@@ -3,22 +3,22 @@ package iohttp
 import "github.com/nieltg/quickshoot-party-match-server/pkg/model"
 
 type newRoomRequest struct {
-	Payload model.RoomPayload
+    Payload model.RoomPayload
 }
 
 type newRoomResponse struct {
-	ID uint64
+    ID uint64
 }
 
 type roomEventsResponse struct {
-	Notifications interface{}
-	LastID        int
+    Notifications interface{}
+    LastID        int
 }
 
 type newRoomMemberRequest struct {
-	Payload model.MemberPayload
+    Payload model.MemberPayload
 }
 
 type newTapTimeRequest struct {
-	Payload model.MemberTapTimePayload
+    Payload model.MemberTapTimePayload
 }
